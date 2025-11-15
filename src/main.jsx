@@ -7,6 +7,8 @@ import { AuthProvider } from "./context/AuthContext";
 
 import axios from "axios";
 
+console.log("Backend URL:", import.meta.env.VITE_API_URL);
+
 axios.defaults.baseURL = import.meta.env.VITE_API_URL;
 axios.defaults.withCredentials = true;
 

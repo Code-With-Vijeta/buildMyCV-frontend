@@ -1,10 +1,11 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", 
+  baseURL: import.meta.env.VITE_API_URL, // use .env variable
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // needed if your backend sends cookies
 });
 
 // Add token automatically if logged in

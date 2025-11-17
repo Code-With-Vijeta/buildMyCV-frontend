@@ -16,7 +16,7 @@ export default function Signup() {
     e.preventDefault();
     setErr("");
     try {
-      const res = await api.post("/auth/register", { name, email, password });
+      const res = await api.post("/api/auth/register", { name, email, password });
       login(res.data.user, res.data.token);
       navigate("/editor");
     } catch (error) {

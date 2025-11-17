@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import { FaPlus, FaEye, FaDownload, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -27,7 +27,7 @@ const Dashboard = () => {
         };
 
         // Corrected API endpoint
-        const response = await axios.get("/api/resumes", config);
+        const response = await api.get("/resumes", config);
 
         if (Array.isArray(response.data)) {
           setResumes(response.data);
@@ -62,7 +62,7 @@ const Dashboard = () => {
         },
       };
 
-      await axios.delete(`/api/resumes/${resumeId}`, config);
+      await api.delete(`/resumes/${resumeId}`, config);
       
       // Update the state to remove the deleted resume from the list
       setResumes(resumes.filter(resume => resume._id !== resumeId));

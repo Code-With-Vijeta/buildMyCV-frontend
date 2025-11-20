@@ -2127,51 +2127,33 @@ useEffect(() => {
 
     try {
       const token = localStorage.getItem("token");
-      const baseURL = import.meta.env.VITE_BASE_URL;
+      if (!token) console.warn("No token found in localStorage!");
 
-      if (!baseURL) {
-        console.error("VITE_BASE_URL is undefined! Set it in .env or Vercel dashboard.");
-        setResumeData(defaultResumeData);
-        setIsLoading(false);
-        return;
+      const baseUrl = import.meta.env.VITE_API_URL;
+      if (!baseUrl) {
+        throw new Error("VITE_API_URL is not defined in your .env file!");
       }
 
-      const url = `${baseURL}/api/resumes/${effectiveResumeId}`;
+      const url = `${baseUrl}/api/resumes/${effectiveResumeId}`;
       console.log("Fetching resume from URL:", url);
 
-      // Only attach token if it exists
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
+      const config = { headers: { Authorization: `Bearer ${token}` } };
       const response = await axios.get(url, config);
-      const fetchedData = response.data;
 
-      console.log("Resume fetched successfully:", fetchedData);
+      console.log("Resume fetched successfully:", response.data);
 
-      const mergedData = {
-        ...defaultResumeData,
-        ...fetchedData,
-      };
-
+      const mergedData = { ...defaultResumeData, ...response.data };
       setResumeData({
         ...mergedData,
-        education: Array.isArray(mergedData.education) ? mergedData.education : [],
-        experience: Array.isArray(mergedData.experience) ? mergedData.experience : [],
-        projects: Array.isArray(mergedData.projects) ? mergedData.projects : [],
-        certifications: Array.isArray(mergedData.certifications) ? mergedData.certifications : [],
-        skills: mergedData.skills && typeof mergedData.skills === "object" ? mergedData.skills : {},
+        education: mergedData.education || [],
+        experience: mergedData.experience || [],
+        projects: mergedData.projects || [],
+        certifications: mergedData.certifications || [],
+        skills: mergedData.skills || {},
       });
-
     } catch (error) {
-      // Handle 403 for private resumes gracefully
-      if (error.response?.status === 403) {
-        toast.error("⚠️ This resume is private. Please log in to view.");
-      } else if (error.response?.status === 404) {
-        toast.error("❌ Resume not found.");
-      } else {
-        toast.error("❌ Failed to load resume. Check console for details.");
-      }
-
       console.error("Fetch Error:", error.response?.data || error.message);
+      toast.error("❌ Failed to load resume. Check console for details.");
       setResumeData(defaultResumeData);
     } finally {
       setIsLoading(false);

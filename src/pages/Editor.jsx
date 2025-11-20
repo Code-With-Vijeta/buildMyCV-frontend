@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import api from "../api/axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import html2canvas from "html2canvas";
@@ -2191,52 +2191,53 @@ const ResumeEditor = ({ resumeId, onSaveSuccess, onCancelEdit }) => {
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const isUpdating = effectiveResumeId;
-      let url = "/api/resumes";
-      let method = "post"; 
+const handleSave = async () => {
+  setIsSaving(true);
+  try {
+    const isUpdating = effectiveResumeId;
+    let url = `${import.meta.env.VITE_BASE_URL}/api/resumes`;
+    let method = "post";
 
-      if (isUpdating) {
-        url = `/api/resumes/${effectiveResumeId}`;
-        method = "put";
-      }
-
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      };
-
-      const res = await axios[method](url, resumeData, config);
-
-      if (res.data._id) {
-        toast.success("Resume successfully saved and updated!");
-
-        setResumeData((prevData) => ({
-          ...prevData,
-          ...res.data,
-          _id: res.data._id,
-          education: res.data.education || [],
-          experience: res.data.experience || [],
-          projects: res.data.projects || [],
-          skills: res.data.skills || {},
-        }));
-
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      console.error("Save Error:", err.response ? err.response.data : err);
-      toast.error(
-        ` Error saving: ${err.response?.data?.message || "Network error"}`
-      );
-    } finally {
-      setIsSaving(false);
+    if (isUpdating) {
+      url = `${import.meta.env.VITE_BASE_URL}/api/resumes/${effectiveResumeId}`;
+      method = "put";
     }
-  };
+
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+
+    const res = await axios[method](url, resumeData, config);
+
+    if (res.data._id) {
+      toast.success("Resume successfully saved and updated!");
+
+      setResumeData((prevData) => ({
+        ...prevData,
+        ...res.data,
+        _id: res.data._id,
+        education: res.data.education || [],
+        experience: res.data.experience || [],
+        projects: res.data.projects || [],
+        skills: res.data.skills || {},
+      }));
+
+      navigate("/dashboard");
+    }
+  } catch (err) {
+    console.error("Save Error:", err.response ? err.response.data : err);
+    toast.error(
+      `Error saving: ${err.response?.data?.message || "Network error"}`
+    );
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   const addEducation = () => {
     setResumeData({

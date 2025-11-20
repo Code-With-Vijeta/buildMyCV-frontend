@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { FaPlus, FaEye, FaDownload, FaTrash } from "react-icons/fa";
+import api from "../api/axios"; // USE THIS ALWAYS
+import { FaPlus, FaEye, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const Dashboard = () => {
@@ -13,35 +13,15 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchResumes = async () => {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setError("Please log in to view your resumes.");
-          setLoading(false);
-          return;
-        }
+        const response = await api.get("/resumes"); 
+        // 👆 IMPORTANT: api.get (NOT axios.get)
 
-        const config = {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        };
-
-        // Corrected API endpoint
-        const response = await axios.get("/api/resumes", config);
-
-        if (Array.isArray(response.data)) {
-          setResumes(response.data);
-        } else {
-          setResumes([]);
-        }
+        setResumes(Array.isArray(response.data) ? response.data : []);
         setLoading(false);
       } catch (err) {
         setError("Failed to load resumes. Please try again later.");
         setLoading(false);
-        console.error(
-          "Dashboard API Error:",
-          err.response?.data || err.message
-        );
+        console.error("Dashboard API Error:", err.response?.data || err.message);
       }
     };
 
@@ -52,22 +32,13 @@ const Dashboard = () => {
     navigate("/editor");
   };
 
-  // Corrected frontend function to handle resume deletion
   const handleDeleteResume = async (resumeId) => {
     try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
+      await api.delete(`/resumes/${resumeId}`); 
+      // 👆 IMPORTANT: api.delete (NOT axios.delete)
 
-      await axios.delete(`/api/resumes/${resumeId}`, config);
-      
-      // Update the state to remove the deleted resume from the list
-      setResumes(resumes.filter(resume => resume._id !== resumeId));
+      setResumes((prev) => prev.filter((r) => r._id !== resumeId));
       toast.success("Resume deleted successfully!");
-
     } catch (err) {
       toast.error("Failed to delete resume.");
       console.error("Delete Error:", err.response?.data || err.message);

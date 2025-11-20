@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../api/axios";
-import { FaPlus, FaEye, FaDownload, FaTrash } from "react-icons/fa";
+import api from "../api/axios"; // ✅ Use your pre-configured axios instance
+import { FaPlus, FaEye, FaTrash } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const Dashboard = () => {
@@ -20,14 +20,14 @@ const Dashboard = () => {
           return;
         }
 
+        // Using api instance with baseURL
         const config = {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         };
 
-        // Corrected API endpoint
-        const response = await axios.get("/api/resumes", config);
+        const response = await api.get("/api/resumes", config);
 
         if (Array.isArray(response.data)) {
           setResumes(response.data);
@@ -36,12 +36,9 @@ const Dashboard = () => {
         }
         setLoading(false);
       } catch (err) {
+        console.error("Dashboard API Error:", err.response?.data || err.message);
         setError("Failed to load resumes. Please try again later.");
         setLoading(false);
-        console.error(
-          "Dashboard API Error:",
-          err.response?.data || err.message
-        );
       }
     };
 
@@ -52,7 +49,6 @@ const Dashboard = () => {
     navigate("/editor");
   };
 
-  // Corrected frontend function to handle resume deletion
   const handleDeleteResume = async (resumeId) => {
     try {
       const token = localStorage.getItem("token");
@@ -62,15 +58,13 @@ const Dashboard = () => {
         },
       };
 
-      await axios.delete(`/api/resumes/${resumeId}`, config);
-      
-      // Update the state to remove the deleted resume from the list
-      setResumes(resumes.filter(resume => resume._id !== resumeId));
-      toast.success("Resume deleted successfully!");
+      await api.delete(`/api/resumes/${resumeId}`, config);
 
+      setResumes(resumes.filter((resume) => resume._id !== resumeId));
+      toast.success("Resume deleted successfully!");
     } catch (err) {
-      toast.error("Failed to delete resume.");
       console.error("Delete Error:", err.response?.data || err.message);
+      toast.error("Failed to delete resume.");
     }
   };
 
@@ -112,9 +106,7 @@ const Dashboard = () => {
             <h2 className="text-xl font-semibold text-gray-600">
               No resumes saved yet.
             </h2>
-            <p className="text-gray-500 mt-2">
-              Start by creating your first resume!
-            </p>
+            <p className="text-gray-500 mt-2">Start by creating your first resume!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -131,8 +123,7 @@ const Dashboard = () => {
                     {resume.title || "No Title"}
                   </p>
                   <p className="text-gray-400 text-xs mt-2">
-                    Last updated:{" "}
-                    {new Date(resume.updatedAt).toLocaleDateString()}
+                    Last updated: {new Date(resume.updatedAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="mt-6 flex flex-col sm:flex-row gap-2">

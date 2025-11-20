@@ -2201,12 +2201,12 @@ useEffect(() => {
     setIsSaving(true);
     try {
       const isUpdating = effectiveResumeId;
-      let url = `${import.meta.env.VITE_BASE_URL}/api/resumes`;
+      let url = `${import.meta.env.VITE_API_URL}/api/resumes`;
       let method = "post";
 
       if (isUpdating) {
         url = `${
-          import.meta.env.VITE_BASE_URL
+          import.meta.env.VITE_API_URL
         }/api/resumes/${effectiveResumeId}`;
         method = "put";
       }

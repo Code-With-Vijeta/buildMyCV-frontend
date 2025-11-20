@@ -2124,10 +2124,11 @@ const ResumeEditor = ({ resumeId, onSaveSuccess, onCancelEdit }) => {
           const config = {
             headers: { Authorization: `Bearer ${token}` },
           };
-          const response = await axios.get(
-            `/api/resumes/${effectiveResumeId}`,
+          axios.get(
+            `${import.meta.env.VITE_BASE_URL}/api/resumes/${effectiveResumeId}`,
             config
           );
+
           const fetchedData = response.data;
 
           // 🛑 CRITICAL FIX: Robust Data Merging 🛑
@@ -2191,53 +2192,54 @@ const ResumeEditor = ({ resumeId, onSaveSuccess, onCancelEdit }) => {
     }
   };
 
-const handleSave = async () => {
-  setIsSaving(true);
-  try {
-    const isUpdating = effectiveResumeId;
-    let url = `${import.meta.env.VITE_BASE_URL}/api/resumes`;
-    let method = "post";
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const isUpdating = effectiveResumeId;
+      let url = `${import.meta.env.VITE_BASE_URL}/api/resumes`;
+      let method = "post";
 
-    if (isUpdating) {
-      url = `${import.meta.env.VITE_BASE_URL}/api/resumes/${effectiveResumeId}`;
-      method = "put";
+      if (isUpdating) {
+        url = `${
+          import.meta.env.VITE_BASE_URL
+        }/api/resumes/${effectiveResumeId}`;
+        method = "put";
+      }
+
+      const token = localStorage.getItem("token");
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      const res = await axios[method](url, resumeData, config);
+
+      if (res.data._id) {
+        toast.success("Resume successfully saved and updated!");
+
+        setResumeData((prevData) => ({
+          ...prevData,
+          ...res.data,
+          _id: res.data._id,
+          education: res.data.education || [],
+          experience: res.data.experience || [],
+          projects: res.data.projects || [],
+          skills: res.data.skills || {},
+        }));
+
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      console.error("Save Error:", err.response ? err.response.data : err);
+      toast.error(
+        `Error saving: ${err.response?.data?.message || "Network error"}`
+      );
+    } finally {
+      setIsSaving(false);
     }
-
-    const token = localStorage.getItem("token");
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    };
-
-    const res = await axios[method](url, resumeData, config);
-
-    if (res.data._id) {
-      toast.success("Resume successfully saved and updated!");
-
-      setResumeData((prevData) => ({
-        ...prevData,
-        ...res.data,
-        _id: res.data._id,
-        education: res.data.education || [],
-        experience: res.data.experience || [],
-        projects: res.data.projects || [],
-        skills: res.data.skills || {},
-      }));
-
-      navigate("/dashboard");
-    }
-  } catch (err) {
-    console.error("Save Error:", err.response ? err.response.data : err);
-    toast.error(
-      `Error saving: ${err.response?.data?.message || "Network error"}`
-    );
-  } finally {
-    setIsSaving(false);
-  }
-};
-
+  };
 
   const addEducation = () => {
     setResumeData({
@@ -2277,7 +2279,6 @@ const handleSave = async () => {
         },
       ],
     });
-    
   };
 
   const deleteExperience = (index) => {
@@ -2626,17 +2627,17 @@ const handleSave = async () => {
                   setResumeData({ ...resumeData, experience: newExp });
                 }}
               />
-               <input
+              <input
                 type="text"
                 placeholder="Location (City, State/Country)"
                 className="w-full border p-2 rounded mb-2"
                 value={exp.location}
                 onChange={(e) => {
-                    const newExp = [...resumeData.experience];
-                    newExp[idx].location = e.target.value; 
-                    setResumeData({ ...resumeData, experience: newExp });
+                  const newExp = [...resumeData.experience];
+                  newExp[idx].location = e.target.value;
+                  setResumeData({ ...resumeData, experience: newExp });
                 }}
-            />
+              />
               <input
                 type="text"
                 placeholder="Start Date"

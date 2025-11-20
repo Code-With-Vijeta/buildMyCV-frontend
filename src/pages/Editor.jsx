@@ -2130,15 +2130,14 @@ useEffect(() => {
       if (!token) console.warn("No token found in localStorage!");
 
       const baseUrl = import.meta.env.VITE_API_URL;
-      if (!baseUrl) {
-        throw new Error("VITE_API_URL is not defined in your .env file!");
-      }
+      if (!baseUrl) throw new Error("VITE_API_URL is not defined!");
 
       const url = `${baseUrl}/api/resumes/${effectiveResumeId}`;
       console.log("Fetching resume from URL:", url);
 
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-      const response = await axios.get(url, config);
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       console.log("Resume fetched successfully:", response.data);
 
@@ -2197,54 +2196,49 @@ useEffect(() => {
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const isUpdating = effectiveResumeId;
-      let url = `${import.meta.env.VITE_API_URL}/api/resumes`;
-      let method = "post";
+const handleSave = async () => {
+  setIsSaving(true);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found! Are you logged in?");
 
-      if (isUpdating) {
-        url = `${
-          import.meta.env.VITE_API_URL
-        }/api/resumes/${effectiveResumeId}`;
-        method = "put";
-      }
+    const baseUrl = import.meta.env.VITE_API_URL;
+    if (!baseUrl) throw new Error("VITE_API_URL is not defined!");
 
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      };
+    let url = `${baseUrl}/api/resumes`;
+    let method = "post";
 
-      const res = await axios[method](url, resumeData, config);
-
-      if (res.data._id) {
-        toast.success("Resume successfully saved and updated!");
-
-        setResumeData((prevData) => ({
-          ...prevData,
-          ...res.data,
-          _id: res.data._id,
-          education: res.data.education || [],
-          experience: res.data.experience || [],
-          projects: res.data.projects || [],
-          skills: res.data.skills || {},
-        }));
-
-        navigate("/dashboard");
-      }
-    } catch (err) {
-      console.error("Save Error:", err.response ? err.response.data : err);
-      toast.error(
-        `Error saving: ${err.response?.data?.message || "Network error"}`
-      );
-    } finally {
-      setIsSaving(false);
+    if (effectiveResumeId) {
+      url = `${baseUrl}/api/resumes/${effectiveResumeId}`;
+      method = "put";
     }
-  };
+
+    const res = await axios[method](url, resumeData, {
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    });
+
+    if (res.data._id) {
+      toast.success("✅ Resume saved successfully!");
+
+      setResumeData({
+        ...resumeData,
+        ...res.data,
+        _id: res.data._id,
+        education: res.data.education || [],
+        experience: res.data.experience || [],
+        projects: res.data.projects || [],
+        skills: res.data.skills || {},
+      });
+
+      navigate("/dashboard");
+    }
+  } catch (err) {
+    console.error("Save Error:", err.response?.data || err.message);
+    toast.error(`Error saving resume: ${err.response?.data?.message || "Network error"}`);
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   const addEducation = () => {
     setResumeData({

@@ -2117,46 +2117,50 @@ const ResumeEditor = ({ resumeId, onSaveSuccess, onCancelEdit }) => {
 
   useEffect(() => {
     const fetchResume = async () => {
-      if (effectiveResumeId) {
-        setIsLoading(true);
-        try {
-          const token = localStorage.getItem("token");
-          const config = {
-            headers: { Authorization: `Bearer ${token}` },
-          };
-          axios.get(
-            `${import.meta.env.VITE_BASE_URL}/api/resumes/${effectiveResumeId}`,
-            config
-          );
-
-          const fetchedData = response.data;
-
-          // 🛑 CRITICAL FIX: Robust Data Merging 🛑
-          const mergedData = {
-            ...defaultResumeData,
-            ...fetchedData,
-          };
-          setResumeData({
-            ...mergedData,
-            education: mergedData.education || [],
-            experience: mergedData.experience || [],
-            projects: mergedData.projects || [],
-            certifications: mergedData.certifications || [],
-            skills: mergedData.skills || {},
-          });
-        } catch (error) {
-          console.error("Fetch Error:", error.response?.data || error.message);
-          toast.error(
-            "❌ Failed to load resume. Check server console for 500 error."
-          );
-          setResumeData(defaultResumeData);
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
+      if (!effectiveResumeId) {
         setResumeData(defaultResumeData);
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const token = localStorage.getItem("token");
+        const config = {
+          headers: { Authorization: `Bearer ${token}` },
+        };
+
+        // ✅ Await the axios call and store the response
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/resumes/${effectiveResumeId}`,
+          config
+        );
+
+        const fetchedData = response.data;
+
+        // 🛠 Merge defaults with fetched data
+        const mergedData = {
+          ...defaultResumeData,
+          ...fetchedData,
+          education: fetchedData.education || [],
+          experience: fetchedData.experience || [],
+          projects: fetchedData.projects || [],
+          certifications: fetchedData.certifications || [],
+          skills: fetchedData.skills || {},
+        };
+
+        setResumeData(mergedData);
+      } catch (error) {
+        console.error("Fetch Error:", error.response?.data || error.message);
+        toast.error(
+          "❌ Failed to load resume. Check server console for 500/404 error."
+        );
+        setResumeData(defaultResumeData);
+      } finally {
+        setIsLoading(false);
       }
     };
+
     fetchResume();
   }, [effectiveResumeId]);
 
